@@ -24,7 +24,7 @@ connect.then(()=>{
 const app=express();
 app.use(bodyParser.json())
 
-const port=2000;
+const port=process.env.PORT||2000;
 const hostname='localhost';
 
 app.use(passport.initialize());

@@ -11,7 +11,6 @@ const config= require('../config');
 exports.local=passport.use('local.teacher',(new LocalStreategy(Teacher.authenticate())));
 
 exports.getToken=(user)=>{
-    console.log(user)
     return jwt.sign(user,config["secret-key-teacher"],
     {expiresIn:36000})
 }

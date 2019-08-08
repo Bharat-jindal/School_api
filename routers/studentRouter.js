@@ -48,7 +48,6 @@ router.post('/signup',cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth
                     res.json({Error:err});
                     return                    
                 }
-                console.log(req);
                 req.body.username=req.user.schoolcode+req.body.class+req.body.rollno;
                 passport.authenticate('local.student')(req,res,()=>{
                     res.statusCode=200;
