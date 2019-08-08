@@ -1,4 +1,4 @@
-if(process.env.NODE_ENV='production'){
+if(process.env.NODE_ENV==='production'){
     module.exports={
         'secret-key-school':process.env.MY_SECRET,
         'secret-key-teacher':process.env.MY_SECRET,
