@@ -44,6 +44,6 @@ app.use((req,res,next)=>{
 
 const server=http.createServer(app)
 
-server.listen(port,hostname,()=>{
+server.listen(port,()=>{
     console.log('Server  started on port',port);
 })
