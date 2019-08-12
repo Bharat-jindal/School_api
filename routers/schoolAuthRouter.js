@@ -40,7 +40,7 @@ School.register(new School({username:req.body.username,
                 passport.authenticate('local.school')(req,res,()=>{
                     res.statusCode=200;
                     res.setHeader('Content-Type','application/json');
-                    res.json({success:true,status:'Authenticated',user})
+                    res.json({success:true})
                 })                
             })
             
@@ -61,6 +61,8 @@ router.post('/login',cors.corsWithOptions,passport.authenticate('local.school',{
     const Token=authenticate.getToken({_id:req.user._id})
     res.statusCode=200;
     res.setHeader('Content-Type','application/json');
+    req.user.salt=undefined,
+    req.user.hash=undefined
     res.json({token:Token,user:req.user})
 });
 
@@ -93,12 +95,29 @@ router.post('/changePassword',cors.corsWithOptions,authenticate.verifySchool,(re
     .catch(err=>next(err))
 });
 
+router.put('/',cors.corsWithOptions,authenticate.verifySchool,(req,res,next)=>{
+    School.findByIdAndUpdate(req.user._id
+        ,{$set:{
+            name:req.body.name,
+            streat:req.body.streat,
+            town:req.body.town,
+            district:req.body.district,
+            state:req.body.state,}},{new:true})
+            .then(user=>{
+                res.statusCode=200;
+            res.setHeader('Content-Type','application/json');
+            res.json(user)
+            })
+            .catch(err=>next(err))
+})
+
 router.post('/setPassword',cors.corsWithOptions,(req,res,next)=>{
-    School.findOne({schoolcode:req.body.schoolcode})
-    .then(school=>{
-        PasswordKey.findOne({uniquepassChange:req.body.uniquePassChange,schoolcode:school.schoolcode})
-        .then(key=>{
+    
+        PasswordKey.findOne({uniquepassChange:req.body.uniquePassChange,schoolcode:req.body.schoolcode})
+        .then(key=>{    
             if(key!==null){
+                School.findOne({schoolcode:req.body.schoolcode})
+            .then(school=>{
                 school.setPassword(req.body.newPassword)
                 .then(newschool=>{
                     newschool.save()
@@ -111,6 +130,8 @@ router.post('/setPassword',cors.corsWithOptions,(req,res,next)=>{
                     .catch(err=>next(err))
                 } )
                 .catch(err=>next(err)) 
+            })
+            .catch(err=>next(err))
             }
             else{
                 var err=new Error('Key not found');
@@ -118,8 +139,8 @@ router.post('/setPassword',cors.corsWithOptions,(req,res,next)=>{
                 next(err)
             }
         })
-    })
-    .catch(err=>next(err))
+        .catch((err)=>next(err))
+    
 });
 
 module.exports=router

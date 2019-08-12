@@ -11,9 +11,6 @@ router.use(bodyParser.json());
 
 router.post('/signup',cors.corsWithOptions,authSchool.verifySchool,(req,res,next)=>{
     var admin=false;
-    if(req.body.admin){
-        admin=req.body.admin
-    }
     Teacher.register(new Teacher({username:(req.user.schoolcode+req.body.username),
                                 name:req.body.name,
                                 streat:req.body.streat,
@@ -21,6 +18,7 @@ router.post('/signup',cors.corsWithOptions,authSchool.verifySchool,(req,res,next
                                 district:req.body.district,
                                 state:req.body.state,
                                 admin:admin,
+                                schoolname:req.user._id,
                                 schoolcode:req.user.schoolcode}),
     req.body.password,(err,teacher)=>{
         if(err){
@@ -37,10 +35,13 @@ router.post('/signup',cors.corsWithOptions,authSchool.verifySchool,(req,res,next
                     res.json({Error:err});
                     return                    
                 }
+                
+                req.body.username=req.user.schoolcode+req.body.username;
                 passport.authenticate('local.teacher')(req,res,()=>{
-                    req.body.username=req.user.schoolcode+req.body.username;
                     res.statusCode=200;
                     res.setHeader('Content-Type','application/json');
+                    teacher.salt=undefined,
+                    teacher.hash=undefined
                     res.json({success:true,status:'Authenticated',teacher})
                 })                
             })
@@ -54,6 +55,8 @@ router.post('/login',cors.corsWithOptions,passport.authenticate('local.teacher',
     const Token=authenticate.getToken({_id:req.user._id})
     res.statusCode=200;
     res.setHeader('Content-Type','application/json');
+    req.user.salt=undefined,
+    req.user.hash=undefined
     res.json({token:Token,user:req.user})
 });
 
@@ -111,6 +114,37 @@ router.post('/setPassword/:teacherId',cors.corsWithOptions,authSchool.verifyScho
                 .catch(err=>next(err)) 
             
     })
+    .catch(err=>next(err))
+});
+
+router.put('/',cors.corsWithOptions,authSchool.verifySchool,(req,res,next)=>{
+    var admin=false;
+    if(req.body.admin){
+        admin=req.body.admin
+    }
+    Teacher.findByIdAndUpdate(req.body._id
+        ,{$set:{
+            name:req.body.name,
+            streat:req.body.streat,
+            town:req.body.town,
+            district:req.body.district,
+            state:req.body.state,
+            admin:admin}},{new:true})
+            .then(user=>{
+                res.statusCode=200;
+            res.setHeader('Content-Type','application/json');
+            res.json(user)
+            })
+            .catch(err=>next(err))
+});
+
+router.delete('/:teacherId',cors.corsWithOptions,authSchool.verifySchool,(req,res,next)=>{
+    Teacher.findOneAndDelete({_id:req.params.teacherId,schoolcode:req.user.schoolcode})
+    .then(resp=>{
+            res.statusCode=200;
+            res.setHeader('Content-Type','application/json');
+            res.json(resp)
+            })
     .catch(err=>next(err))
 });
 

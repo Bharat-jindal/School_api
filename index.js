@@ -3,6 +3,7 @@ const http=require('http');
 const bodyParser= require('body-parser');
 const passport=require('passport');
 const config=require('./config');
+const cors=require('./routers/cors')
 
 const schoolAuthRouter=require('./routers/schoolAuthRouter');
 const studentAuthRouter =require('./routers/studentRouter');
@@ -15,7 +16,7 @@ const mongoose=require('mongoose');
 mongoose.Promise=require('bluebird');
 
 const connect=mongoose.connect(config.mongoUrl,{useFindAndModify:false,useNewUrlParser:true});
-
+console.log(config.mongoUrl);
 connect.then(()=>{
     console.log('Connected correctly to the servver');
 })
@@ -27,19 +28,20 @@ app.use(bodyParser.json())
 const port=process.env.PORT||2000;
 const hostname='localhost';
 
-app.use(passport.initialize());
 
+app.use(passport.initialize());
+app.use('*', cors.cors);
 app.use('/school',schoolAuthRouter);
-app.use('/students',studentAuthRouter);
-app.use('/teachers',teacherRouter);
+app.use('/student',studentAuthRouter);
+app.use('/teacher',teacherRouter);
 app.use('/tasks',taskRouter);
 app.use('/fees',feeRouter);
-app.use('/library',bookRouter);
+app.use('/books',bookRouter);
 
 app.use((req,res,next)=>{
-    res.statusCode=200;
-    res.setHeader('Content-Type','text/html');
-    res.end('<html><body><h1>Index html</h1><p>You are in index from js</p></body></html>')
+    res.statusCode=400;
+    res.setHeader('Content-Type','applocation/json');
+    res.end()
 })
 
 const server=http.createServer(app)

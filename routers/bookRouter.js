@@ -51,7 +51,7 @@ bookRouter.route('/:bookId')
             }
         }
         else{
-            var err =new Error(`Task not found`);
+            var err =new Error(`Book not found`);
             err.status=404;
             return next(err) 
         }
@@ -99,16 +99,25 @@ bookRouter.route('/issue/:bookId')
     })
     .then(book=>{
         if(req.body.student!==''){
-            Student.findByIdAndUpdate(req.body.student,
+            Student.findOneAndUpdate({username:req.body.student},
                 {$push:{books:req.params.bookId}},{new:true})
             .then(student=>{
-                res.statusCode=200;
+                if(student===null){
+                    book.save()
+                    .then(resp=>{
+                        var error=new Error('Something went wrong')
+                        error.status=400;
+                        return next(error)
+                    })
+                    .catch(err=>next(err))
+                }
+                else{res.statusCode=200;
                 res.setHeader('Content-Type','application/json')
-                res.json(student)
+                res.json(student)}
             },err=>{next(err)})
             .catch(err=>next(err))
         }
-        else if(req.body.student===''){Student.findByIdAndUpdate(book.student,
+        else if(req.body.student===''){Student.findOneAndUpdate({username:book.student},
             {$pull:{books:req.params.bookId}},{new:true})
         .then(student=>{
             res.statusCode=200;
@@ -121,6 +130,19 @@ bookRouter.route('/issue/:bookId')
             error.status=400;
             next(error)
         }
+    },err=>{next(err)})
+    .catch(err=>next(err))
+})
+
+bookRouter.route('/studBooks')
+.post(cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth.verifyAdmin(),(req,res,next)=>{
+    Student.findOne({schoolcode:req.user.schoolcode,username:req.body.username})
+    .select('books')
+    .populate('books')
+    .then(books=>{
+        res.statusCode=200;
+        res.setHeader('Content-Type','application/json')
+        res.json(books)
     },err=>{next(err)})
     .catch(err=>next(err))
 })

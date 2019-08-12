@@ -44,7 +44,7 @@ taskRouter.route('/teacher')
     .then(task=>{
         res.statusCode=200;
         res.setHeader('Content-Type','application/json')
-        res.json(task)
+        res.json({task})
     },err=>{next(err)})
     .catch(err=>next(err))
 })
@@ -98,7 +98,7 @@ taskRouter.route('/teacher/:taskId')
     .catch(err=>next(err))
 })
 .delete(cors.corsWithOptions,teacherAuth.verifyTeacher,(req,res,next)=>{
-    Task.deleteOne({_id:req.user.taskId,teacher:req.user._id})
+    Task.deleteOne({_id:req.params.taskId,teacher:req.user._id})
     .then(task=>{
         res.statusCode=200;
         res.setHeader('Content-Type','application/json')

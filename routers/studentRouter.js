@@ -10,8 +10,8 @@ const teacherAuth =require('../authenticate/teacherAuth');
 var router=express.Router();
 router.use(bodyParser.json());
 
-router.get('/',cors.corsWithOptions,teacherAuth.verifyTeacher,(req,res,next)=>{
-    Student.find({schoolcode:req.user.schoolcode})
+router.post('/get',cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth.verifyAdmin(),(req,res,next)=>{
+    Student.find({schoolcode:req.user.schoolcode,class:req.body.class})
     .then(Students=>{
         res.statusCode=200;
         res.setHeader('Content-Type','application/json')
@@ -41,7 +41,7 @@ router.post('/signup',cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth
         }
         else{
 
-            Student.save((err,user)=>{
+            Student.save((err,student)=>{
                 if(err){
                     res.statusCode=500;
                     res.setHeader('Content-Type','application/json');
@@ -52,7 +52,11 @@ router.post('/signup',cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth
                 passport.authenticate('local.student')(req,res,()=>{
                     res.statusCode=200;
                     res.setHeader('Content-Type','application/json');
-                    res.json({success:true,status:'Authenticated',user})
+                    student.hash=undefined;
+                    student.salt=undefined;
+                    student.fees=undefined;
+                    student.books=undefined
+                    res.json({success:true,status:'Authenticated',student})
                 })                
             })
             
@@ -65,6 +69,10 @@ router.post('/login',cors.corsWithOptions,passport.authenticate('local.student',
     const Token=authenticate.getToken({_id:req.user._id});
     res.statusCode=200;
     res.setHeader('Content-Type','application/json');
+    req.user.salt=undefined;
+    req.user.hash=undefined;
+    req.user.fees=undefined;
+    req.user.books=undefined
     res.json({token:Token,user:req.user})
 });
 
@@ -128,5 +136,35 @@ router.post('/setPassword/:studId',cors.corsWithOptions,teacherAuth.verifyTeache
     })
     .catch(err=>next(err))
 });
+
+router.put('/',cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth.verifyAdmin(),(req,res,next)=>{
+    Student.findByIdAndUpdate(req.body._id
+        ,{$set:{
+                    name:req.body.name,
+                    streat:req.body.streat,
+                    town:req.body.town,
+                    district:req.body.district,
+                    state:req.body.state,
+                    fathername:req.body.fathername,
+                    mothername:req.body.mothername
+                }},{new:true})
+            .then(user=>{
+                res.statusCode=200;
+            res.setHeader('Content-Type','application/json');
+            res.json(user)
+            })
+            .catch(err=>next(err))
+});
+
+router.delete('/:studentId',cors.corsWithOptions,teacherAuth.verifyTeacher,teacherAuth.verifyAdmin(),(req,res,next)=>{
+    Student.findOneAndDelete({_id:req.params.studentId,schoolcode:req.user.schoolcode})
+    .then(resp=>{
+            res.statusCode=200;
+            res.setHeader('Content-Type','application/json');
+            res.json({resp})
+            })
+    .catch(err=>next(err))
+});
+
 
 module.exports=router

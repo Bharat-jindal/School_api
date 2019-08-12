@@ -10,7 +10,7 @@ if(process.env.NODE_ENV==='production'){
         'secret-key-school':'1246-xjzk-dkckfnj76pppib72',
         'secret-key-teacher':'1246-sdyu8o9-uyujh',
         'secret-key-user':'1246-fsvdfdf-dkcsdnfkjepnj7672',
-        'mongoUrl':'mongodb://localhost:27017/School_Api'
+        'mongoUrl':'mongodb://localhost:27017/School_api'
     }
 }
 
